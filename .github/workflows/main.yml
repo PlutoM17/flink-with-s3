@@ -25,4 +25,4 @@ jobs:
 
           context: .
           push: true
-          tags: myfirst-flink-cluster/flink-with-s3:1.20.1-github
+          tags: moriaty10000/flink-with-s3:1.20.1-github
