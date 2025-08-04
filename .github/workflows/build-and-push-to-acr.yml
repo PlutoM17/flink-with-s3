@@ -1,0 +1,44 @@
+# .github/workflows/build-and-push-to-acr.yml
+
+name: Build and Push to Aliyun ACR
+
+# 定义工作流触发的事件
+# 这里设置为当有代码推送到 main 分支时触发
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest # 使用最新的 Ubuntu 虚拟机环境
+
+    steps:
+      # 第一步：检出代码
+      # 拉取你的 GitHub 仓库代码到虚拟机中
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 第二步：登录到阿里云容器镜像服务 (ACR)
+      # 使用官方的 docker/login-action 动作
+      # 它会使用您在 GitHub Secrets 中存储的凭证
+      - name: Log in to Aliyun Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.ACR_REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      # 第三步：构建并推送 Docker 镜像
+      # 使用官方的 docker/build-push-action 动作
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: . # Dockerfile 所在的上下文路径，. 表示仓库根目录
+          file: ./Dockerfile # Dockerfile 的路径
+          push: true # 明确指示要推送镜像
+          # 为镜像打标签。格式为：<registry>/<namespace>/<image-name>:<tag>
+          # 您需要将 your-namespace 替换为您在 ACR 中创建的命名空间
+          # 您可以设置多个标签，例如 latest 和一个基于 commit SHA 的动态标签
+          tags: |
+            ${{ secrets.ACR_REGISTRY }}/your-namespace/flink-with-s3:latest
+            ${{ secrets.ACR_REGISTRY }}/your-namespace/flink-with-s3:${{ github.sha }}
